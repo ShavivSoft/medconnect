@@ -9,8 +9,8 @@ opencv-python-headless
 numpy
 pillow
 
-# NLP (Lightweight for Cloud)
-spacy==3.7.2
+# NLP (Optional/Lightweight)
+# spacy is removed to ensure build success on free tier
 setuptools
 wheel
 
