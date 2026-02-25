@@ -1,21 +1,25 @@
 # Core API
 flask
 flask-cors
+requests
 
 # OCR & Image Processing
 pytesseract
-opencv-python
+opencv-python-headless
 numpy
 pillow
 
 # NLP
 spacy
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.1/en_core_web_sm-3.4.1-py3-none-any.whl
 
 # PDF Extraction
 pdfplumber
 PyPDF2
 
-# AI Summary
+# AI / LLM
+google-generativeai
+openai
 ollama
 
 # Utilities
