@@ -1,0 +1,51 @@
+{
+  "anonymous_user": {
+    "event_id": "4889ea2b-9bf2-471b-8104-58fd4af11bac",
+    "idempotency_key": "4889ea2b-9bf2-471b-8104-58fd4af11bac",
+    "patient_id": "anonymous_user",
+    "patient_name": "Unknown Patient",
+    "trigger_source": "MANUAL_SOS",
+    "status": "ESCALATED",
+    "triggered_at": "2026-02-25T00:05:45.537494Z",
+    "confirmation_deadline": "2026-02-25T00:06:15.537494Z",
+    "vitals_snapshot": {},
+    "location": null,
+    "caretaker_phone": null,
+    "medical_context": null,
+    "actions_taken": [
+      {
+        "action": "CARETAKER_NOTIFIED",
+        "channel": [
+          "sms",
+          "push",
+          "in_app"
+        ],
+        "success": true,
+        "timestamp": "2026-02-25T00:06:15.915605Z"
+      },
+      {
+        "action": "DIAL_108",
+        "number": "108",
+        "success": true,
+        "timestamp": "2026-02-25T00:06:15.915605Z"
+      },
+      {
+        "action": "GPS_SHARED",
+        "location": null,
+        "success": false,
+        "timestamp": "2026-02-25T00:06:15.917648Z"
+      },
+      {
+        "action": "VOICE_AGENT_DISPATCHED",
+        "packet": {
+          "script": "Hello, this is the Connect Care automated emergency system. We are calling on behalf of Unknown Patient, who requires immediate medical assistance. Current vitals: not available. location not available.  Please dispatch an ambulance immediately. The caretaker has been notified. Emergency reference: 4889ea2b-9bf2-471b-8104-58fd4af11bac.",
+          "event_id": "4889ea2b-9bf2-471b-8104-58fd4af11bac"
+        },
+        "timestamp": "2026-02-25T00:06:15.917648Z"
+      }
+    ],
+    "resolved_at": null,
+    "resolved_by": null,
+    "escalated_at": "2026-02-25T00:06:15.900999Z"
+  }
+}

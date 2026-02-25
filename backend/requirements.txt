@@ -1,0 +1,34 @@
+# Core API
+flask
+flask-cors
+
+# OCR & Image Processing
+pytesseract
+opencv-python
+numpy
+pillow
+
+# NLP
+spacy
+
+# PDF Extraction
+pdfplumber
+PyPDF2
+
+# AI Summary
+ollama
+
+# Utilities
+python-dotenv
+
+# Auth
+PyJWT
+
+# Cloud Database + Storage
+supabase
+
+# Production server
+waitress
+
+# Telephony
+twilio

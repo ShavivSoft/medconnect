@@ -1,0 +1,22 @@
+[
+  {
+    "event_type": "EMERGENCY_TRIGGERED",
+    "event_id": "4889ea2b-9bf2-471b-8104-58fd4af11bac",
+    "patient_id": "anonymous_user",
+    "trigger_source": "MANUAL_SOS",
+    "idempotency_key": "4889ea2b-9bf2-471b-8104-58fd4af11bac",
+    "logged_at": "2026-02-25T00:05:45.551550Z"
+  },
+  {
+    "event_type": "EMERGENCY_ESCALATED",
+    "event_id": "4889ea2b-9bf2-471b-8104-58fd4af11bac",
+    "patient_id": "anonymous_user",
+    "actions": [
+      "CARETAKER_NOTIFIED",
+      "DIAL_108",
+      "GPS_SHARED",
+      "VOICE_AGENT_DISPATCHED"
+    ],
+    "logged_at": "2026-02-25T00:06:15.917648Z"
+  }
+]

@@ -1,0 +1,369 @@
+[
+  {
+    "session_id": "76d64fd4-3730-4773-98d8-1c6988ac3f63",
+    "timestamp": "2026-02-23T14:04:26.097860Z",
+    "filename": "Appendix-4TaiwanICDF-Medical-Report.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Brain",
+      "Heart",
+      "Kidneys",
+      "Liver",
+      "Lungs",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "25659d4b-5db9-4c13-9f2a-ee445059b3a0",
+    "timestamp": "2026-02-23T14:14:20.746940Z",
+    "filename": "Appendix-4TaiwanICDF-Medical-Report.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Brain",
+      "Heart",
+      "Kidneys",
+      "Liver",
+      "Lungs",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "31f1583b-95f9-4b12-bec0-4104e6cc107f",
+    "timestamp": "2026-02-23T14:36:31.886192Z",
+    "filename": "Appendix-4TaiwanICDF-Medical-Report.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Brain",
+      "Heart",
+      "Kidneys",
+      "Liver",
+      "Lungs",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "def66a2b-b5c8-4152-b0ed-e83458528499",
+    "timestamp": "2026-02-23T14:37:22.151732Z",
+    "filename": "Sample-filled-in-MR.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Brain",
+      "Heart",
+      "Kidneys"
+    ]
+  },
+  {
+    "session_id": "00637b5c-5bcf-4399-a345-5b4fc267b056",
+    "timestamp": "2026-02-23T14:38:43.884811Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "93a070f7-94e5-4a2d-9921-261baab20f88",
+    "timestamp": "2026-02-23T14:39:33.345444Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "ea1b4239-cd0d-4801-bd39-752b967c390d",
+    "timestamp": "2026-02-23T15:00:07.425938Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "de2bf5d0-8063-481a-be88-cbbf7f7a1fc0",
+    "timestamp": "2026-02-23T15:02:08.118828Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "e12e7867-65a5-4cab-9905-2aea0d7b5a10",
+    "timestamp": "2026-02-23T15:07:01.908675Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "27999f36-eafd-4f68-adc8-7fe5047759dd",
+    "timestamp": "2026-02-23T19:54:54.070165Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "4e00ecc2-1624-4735-b393-eae114a3e35b",
+    "timestamp": "2026-02-24T07:51:52.426770Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "35fdbf65-fc80-484e-8d2f-793112fafcd6",
+    "timestamp": "2026-02-24T08:15:45.442611Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "3aaf35ed-4292-40c7-8bd7-93dbfda4697e",
+    "timestamp": "2026-02-24T08:24:21.556573Z",
+    "filename": "WhatsApp Image 2026-02-24 at 1.53.02 PM.jpeg",
+    "status": "success",
+    "affected_anatomy": [
+      "Brain"
+    ]
+  },
+  {
+    "session_id": "1e32209c-681c-4874-b605-67e79425fc74",
+    "timestamp": "2026-02-24T09:05:02.841929Z",
+    "filename": "N149.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "35d80d69-6b6d-4e54-9001-4c7dee346dad",
+    "timestamp": "2026-02-24T21:08:17.898341Z",
+    "filename": "dummy.txt",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "ca9776a4-7060-4c6d-a8bf-5d2602878f6f",
+    "timestamp": "2026-02-24T21:11:01.666120Z",
+    "filename": "dummy.txt",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "ee1ed467-6b0c-4a0b-8b5b-47f66165e658",
+    "timestamp": "2026-02-24T21:11:54.257248Z",
+    "filename": "dummy.txt",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "3db02122-a43d-4834-89ea-8fa144711627",
+    "timestamp": "2026-02-24T21:17:30.922944Z",
+    "filename": "report.txt",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "843f7af5-f793-4e34-8d6e-19b7a7b74827",
+    "timestamp": "2026-02-24T21:30:11.683662Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "57c66725-b19c-4d21-98bb-ddf22987ebd7",
+    "timestamp": "2026-02-24T21:49:44.125921Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "4cb6f4b8-3e6c-40b6-93b8-4e0ec51d3360",
+    "timestamp": "2026-02-24T21:50:04.680405Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "b5269a93-fbae-4b4a-9049-7b0888d714ea",
+    "timestamp": "2026-02-24T22:03:30.391776Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "263c25e2-1e17-4cfc-bbf0-0051852a59db",
+    "timestamp": "2026-02-24T22:03:54.934258Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "205e119e-e3d9-4589-a3f0-b68f82e3528b",
+    "timestamp": "2026-02-24T22:18:17.865064Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "33979c72-82ae-45c6-a127-4e70f19a39de",
+    "timestamp": "2026-02-24T22:18:42.697013Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "dc5aa31a-08fa-499f-b0b8-8b229e44c4a2",
+    "timestamp": "2026-02-24T22:26:47.645944Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "ca21dcfd-3c0e-495a-81c7-705cf02104bb",
+    "timestamp": "2026-02-24T22:26:53.416775Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "2593daf5-6be4-4115-a2bb-1c20bbeaba99",
+    "timestamp": "2026-02-24T22:31:09.452687Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "00ad6888-21cb-4fa6-b860-79b9522176ad",
+    "timestamp": "2026-02-24T22:33:53.350762Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "02901d78-e3db-43bf-8978-64f9f3b3a35b",
+    "timestamp": "2026-02-24T22:34:03.961543Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "2b93809c-bcbf-41b6-837e-f3d2d572def1",
+    "timestamp": "2026-02-24T22:36:47.996439Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "3275793b-f206-4324-af98-b1c546bc06c1",
+    "timestamp": "2026-02-24T22:44:38.627636Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "917b9561-c9a8-4088-a0ec-f3db3ede6737",
+    "timestamp": "2026-02-24T22:50:40.072193Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "8991d6ad-5817-40f9-90e7-687f1e100dce",
+    "timestamp": "2026-02-24T22:55:03.132683Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "86ae475e-c071-4fc3-b42d-00b2c03fcc6a",
+    "timestamp": "2026-02-24T23:02:22.554258Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "611ea596-cc7c-43e6-939d-8425b2126a1f",
+    "timestamp": "2026-02-24T23:03:18.056346Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "757b44b7-676f-495e-a939-62a0ac74dd32",
+    "timestamp": "2026-02-24T23:09:21.631520Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "1a8c1b9b-26dd-49d5-9051-a53d9fe33065",
+    "timestamp": "2026-02-24T23:10:02.933264Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "c81a08c2-7936-4e9f-ba2b-8cabee0793fd",
+    "timestamp": "2026-02-24T23:14:01.643627Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Abdomen",
+      "Gastrointestinal system"
+    ]
+  },
+  {
+    "session_id": "3a0b0590-13b2-4bc1-865b-4743a7a766e8",
+    "timestamp": "2026-02-24T23:20:29.933781Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  },
+  {
+    "session_id": "a86deab7-b56b-467f-92f6-d59388e7c9ce",
+    "timestamp": "2026-02-25T00:26:45.377303Z",
+    "filename": "New Doc 03-30-2025 13.46_1.pdf",
+    "status": "success",
+    "affected_anatomy": [
+      "Intestines",
+      "Liver",
+      "Stomach"
+    ]
+  },
+  {
+    "session_id": "85166384-e026-4bed-9a1b-f6cd5d2355ad",
+    "timestamp": "2026-02-25T00:27:03.200708Z",
+    "filename": "New Doc 05-23-2025 16.20_1.pdf",
+    "status": "success",
+    "affected_anatomy": []
+  }
+]
