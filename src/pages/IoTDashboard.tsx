@@ -149,7 +149,7 @@ const MiniMap = ({ lat, lon }: { lat?: number; lon?: number }) => (
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function IoTDashboard() {
     const patientId = (() => {
-        try { return (JSON.parse(localStorage.getItem("medconnect_auth") || "{}") as { user_id?: string }).user_id || "demo_patient"; }
+        try { return (JSON.parse(localStorage.getItem("connectcare_auth") || "{}") as { user_id?: string }).user_id || "demo_patient"; }
         catch { return "demo_patient"; }
     })();
 

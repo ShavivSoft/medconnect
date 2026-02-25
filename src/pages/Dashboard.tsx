@@ -20,7 +20,7 @@ const Dashboard = () => {
 
   const patientId = (() => {
     try {
-      const auth = JSON.parse(localStorage.getItem("medconnect_auth") || "{}");
+      const auth = JSON.parse(localStorage.getItem("connectcare_auth") || "{}");
       return auth.user_id || "demo_patient";
     } catch { return "demo_patient"; }
   })();
@@ -115,6 +115,7 @@ const Dashboard = () => {
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                   <Heart className="h-4 w-4 text-red-500" /> Heart Rate
+                  {vitals && <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" title="Live data" />}
                 </div>
                 {vitals?.source && <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-600 border-emerald-100">{vitals.source}</Badge>}
               </CardTitle>

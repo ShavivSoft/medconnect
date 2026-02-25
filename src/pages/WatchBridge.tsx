@@ -28,7 +28,7 @@ import {
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const DEV_STORAGE = 'medconnect_bridge_device_v2';
-const INTERVAL_MS = 5000;   // stream every 5 s
+const INTERVAL_MS = 2500;   // stream every 2.5 s (faster for 'lively' feel)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GATT Service / Characteristic UUIDs  (standard Bluetooth SIG assignments)
@@ -64,6 +64,8 @@ function buildPayload(
         respiratory_rate: Math.round(13 + stress * 8 + jitter() * 2),
         ...(battery !== null && { battery_pct: battery }),
         ...(gps && { latitude: gps.lat, longitude: gps.lon }),
+        source: 'WatchBridge',
+        recorded_at: new Date().toISOString()
     };
 }
 
@@ -109,9 +111,13 @@ export default function WatchBridge() {
         try {
             const c = localStorage.getItem(DEV_STORAGE);
             if (c) return (JSON.parse(c) as DeviceCache).patientId;
+            // Fallback: try connectcare_auth used by main dashboard
+            const auth = localStorage.getItem('connectcare_auth');
+            if (auth) return (JSON.parse(auth)).user_id || '';
         } catch { /* */ }
         return '';
     });
+    const [useMock, setUseMock] = useState(false);
     const [sent, setSent] = useState(0);
     const [lastSent, setLastSent] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -367,7 +373,13 @@ export default function WatchBridge() {
         } catch { /* not available in some browsers */ }
 
         streamRef.current = setInterval(async () => {
-            const hr = heartRate ?? 72;
+            let hr = heartRate;
+
+            // If mock mode is on or heartRate is null, we simulate a 'lively' heart rate
+            if (useMock || hr === null) {
+                hr = 70 + Math.floor(Math.random() * 15);
+            }
+
             const gpsNow = gps;
             const batNow = battery;
             const payload = buildPayload(hr, batNow, gpsNow ? { lat: gpsNow.lat, lon: gpsNow.lon } : null);
@@ -570,6 +582,22 @@ export default function WatchBridge() {
                             {patientId || '⚠ Set a patient ID before streaming'}
                         </div>
                     )}
+                </div>
+
+                {/* ── Mode Selector ─────────────────────────────────────────────── */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setUseMock(false)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${!useMock ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                    >
+                        Real Watch
+                    </button>
+                    <button
+                        onClick={() => setUseMock(true)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${useMock ? 'bg-violet-600 border-violet-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                    >
+                        Mock Engine (Lively)
+                    </button>
                 </div>
 
                 {/* ── Status Row ────────────────────────────────────────────────── */}

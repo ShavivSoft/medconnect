@@ -149,6 +149,14 @@ def _save_json(path, data):
         logger.error(f"Save failed {path}: {e}")
 
 
+def _load_vitals_store():
+    return _load_json(VITALS_STORE_FILE, {})
+
+
+def _save_vitals_store(data):
+    _save_json(VITALS_STORE_FILE, data)
+
+
 def log_session(session_id, filename, status, affected):
     try:
         logs = _load_json(SESSION_LOG_FILE, [])

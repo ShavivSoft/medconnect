@@ -224,7 +224,7 @@ def ingest_iot_reading(device: dict, reading: dict) -> dict:
         _save_vitals_store(store)
 
         thresholds = check_all_thresholds(reading)
-        risk_flags = generate_risk_flags(thresholds, {})
+        risk_flags = generate_risk_flags(reading, [], thresholds)
         return {
             "status":        "ok",
             "patient_id":    patient_id,
