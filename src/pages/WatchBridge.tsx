@@ -28,7 +28,7 @@ import {
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const DEV_STORAGE = 'medconnect_bridge_device_v2';
-const INTERVAL_MS = 2500;   // stream every 2.5 s (faster for 'lively' feel)
+const INTERVAL_MS = 1000;   // stream every 1s for real-time responsiveness
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GATT Service / Characteristic UUIDs  (standard Bluetooth SIG assignments)
@@ -379,9 +379,18 @@ export default function WatchBridge() {
         streamRef.current = setInterval(async () => {
             let hr = heartRate;
 
-            // If mock mode is on or heartRate is null, we simulate a 'lively' heart rate
-            if (useMock || hr === null) {
-                hr = 70 + Math.floor(Math.random() * 15);
+            // In mock mode, we always simulate
+            // In real mode, we ONLY simulate if heartRate is null AND we want a lively demo.
+            // But to avoid the "72 vs 97" issue, if we have a real HR, we MUST use it.
+            if (useMock) {
+                hr = 70 + Math.floor(Math.random() * 20);
+            } else if (hr === null) {
+                // If watch is NOT connected or hasn't sent data, we can optionally mock
+                // for the 'lively' feel, but let's keep it 0 or null if we want strict real data.
+                // For now, let's keep a subtle mock only if not connected at all.
+                if (btStatus !== 'connected') {
+                    hr = 70 + Math.floor(Math.random() * 10);
+                }
             }
 
             const gpsNow = gps;
@@ -649,21 +658,21 @@ export default function WatchBridge() {
 
                 {/* ── Live Heart Rate ────────────────────────────────────────────── */}
                 {(btStatus === 'connected' || (streaming && useMock)) && (
-                    <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-5 text-center">
+                    <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-5 text-center transition-all">
                         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-2">
                             <Heart className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-                            {btStatus === 'connected' ? 'Live Heart Rate from Watch' : 'Simulated Lively Heart Rate'}
+                            {useMock ? 'Simulated Lively Heart Rate' : 'Live Heart Rate from Watch'}
                         </div>
                         <div className="text-7xl font-black font-mono text-red-400 tabular-nums">
-                            {heartRate ?? liveData?.heart_rate ?? '--'}
+                            {useMock ? (liveData?.heart_rate ?? '--') : (heartRate ?? '--')}
                         </div>
                         <div className="text-sm text-slate-400 mt-1">bpm</div>
-                        {(heartRate || (streaming && liveData?.heart_rate)) && (
-                            <div className={`text-xs mt-2 font-medium ${(heartRate || liveData?.heart_rate || 0) < 60 ? 'text-blue-400' :
-                                (heartRate || liveData?.heart_rate || 0) > 100 ? 'text-red-400' : 'text-emerald-400'
+                        {((useMock ? liveData?.heart_rate : heartRate) ?? 0) > 0 && (
+                            <div className={`text-xs mt-2 font-medium ${((useMock ? liveData?.heart_rate : heartRate) ?? 0) < 60 ? 'text-blue-400' :
+                                ((useMock ? liveData?.heart_rate : heartRate) ?? 0) > 100 ? 'text-red-400' : 'text-emerald-400'
                                 }`}>
-                                {(heartRate || liveData?.heart_rate || 0) < 60 ? '↓ Bradycardia range' :
-                                    (heartRate || liveData?.heart_rate || 0) > 100 ? '↑ Tachycardia range' : '✓ Normal range'}
+                                {((useMock ? liveData?.heart_rate : heartRate) ?? 0) < 60 ? '↓ Bradycardia range' :
+                                    ((useMock ? liveData?.heart_rate : heartRate) ?? 0) > 100 ? '↑ Tachycardia range' : '✓ Normal range'}
                             </div>
                         )}
                     </div>
