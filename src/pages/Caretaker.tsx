@@ -151,8 +151,8 @@ function IoTStrip({ patientId }: { patientId: string }) {
             .then(({ data }) => {
                 if (data?.[0]) {
                     const latest = data[0] as LiveVitals;
-                    const diff = Date.now() - new Date(latest.recorded_at!).getTime();
-                    if (diff < 120000) bump(latest);
+                    const diff = Math.abs(Date.now() - new Date(latest.recorded_at!).getTime());
+                    if (diff < 86400000) bump(latest);
                 }
             });
 

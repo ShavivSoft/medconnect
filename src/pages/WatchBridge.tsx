@@ -109,13 +109,17 @@ export default function WatchBridge() {
     const [pairedDevices, setPairedDevices] = useState<BluetoothDevice[]>([]); // fast reconnect
     const [patientId, setPatientId] = useState(() => {
         try {
+            // Priority 1: Currently logged in user
+            const auth = localStorage.getItem('connectcare_auth');
+            if (auth) {
+                const parsed = JSON.parse(auth);
+                if (parsed.user_id) return parsed.user_id;
+            }
+            // Priority 2: Previously used bridge device
             const c = localStorage.getItem(DEV_STORAGE);
             if (c) return (JSON.parse(c) as DeviceCache).patientId;
-            // Fallback: try connectcare_auth used by main dashboard
-            const auth = localStorage.getItem('connectcare_auth');
-            if (auth) return (JSON.parse(auth)).user_id || '';
         } catch { /* */ }
-        return '';
+        return 'demo_patient';
     });
     const [useMock, setUseMock] = useState(false);
     const [sent, setSent] = useState(0);
@@ -644,22 +648,22 @@ export default function WatchBridge() {
                 </div>
 
                 {/* ── Live Heart Rate ────────────────────────────────────────────── */}
-                {btStatus === 'connected' && (
+                {(btStatus === 'connected' || (streaming && useMock)) && (
                     <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-5 text-center">
                         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-2">
                             <Heart className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-                            Live Heart Rate from Watch
+                            {btStatus === 'connected' ? 'Live Heart Rate from Watch' : 'Simulated Lively Heart Rate'}
                         </div>
                         <div className="text-7xl font-black font-mono text-red-400 tabular-nums">
-                            {heartRate ?? '--'}
+                            {heartRate ?? liveData?.heart_rate ?? '--'}
                         </div>
                         <div className="text-sm text-slate-400 mt-1">bpm</div>
-                        {heartRate && (
-                            <div className={`text-xs mt-2 font-medium ${heartRate < 60 ? 'text-blue-400' :
-                                heartRate > 100 ? 'text-red-400' : 'text-emerald-400'
+                        {(heartRate || (streaming && liveData?.heart_rate)) && (
+                            <div className={`text-xs mt-2 font-medium ${(heartRate || liveData?.heart_rate || 0) < 60 ? 'text-blue-400' :
+                                (heartRate || liveData?.heart_rate || 0) > 100 ? 'text-red-400' : 'text-emerald-400'
                                 }`}>
-                                {heartRate < 60 ? '↓ Bradycardia range' :
-                                    heartRate > 100 ? '↑ Tachycardia range' : '✓ Normal range'}
+                                {(heartRate || liveData?.heart_rate || 0) < 60 ? '↓ Bradycardia range' :
+                                    (heartRate || liveData?.heart_rate || 0) > 100 ? '↑ Tachycardia range' : '✓ Normal range'}
                             </div>
                         )}
                     </div>

@@ -21,8 +21,12 @@ const Dashboard = () => {
   const patientId = (() => {
     try {
       const auth = JSON.parse(localStorage.getItem("connectcare_auth") || "{}");
-      return auth.user_id || "demo_patient";
-    } catch { return "demo_patient"; }
+      const id = auth.user_id || "demo_patient_001";
+      console.log("[Dashboard] Tracking Patient ID:", id);
+      return id;
+    } catch {
+      return "demo_patient_001";
+    }
   })();
 
   const [backendStatus, setBackendStatus] = React.useState<'checking' | 'online' | 'offline'>('checking');
@@ -31,9 +35,9 @@ const Dashboard = () => {
   // Real-world data integration
   React.useEffect(() => {
     const processReading = (data: any) => {
-      // Only accept if recent (within 5 minutes)
-      const diff = Date.now() - new Date(data.recorded_at || Date.now()).getTime();
-      if (diff > 300000) return;
+      // Only accept if recent (within 24 hours to prevent clock skew issues)
+      const diff = Math.abs(Date.now() - new Date(data.recorded_at || Date.now()).getTime());
+      if (diff > 86400000) return;
 
       setVitals({
         heartRate: data.heart_rate,
