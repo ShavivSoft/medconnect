@@ -48,20 +48,36 @@ function parseHR(view: DataView): number {
 // ─────────────────────────────────────────────────────────────────────────────
 // Vitals estimator  (HR is real from watch; rest derived from HR for demo)
 // ─────────────────────────────────────────────────────────────────────────────
-function buildPayload(
+function buildMockPayload(
     heartRate: number,
     battery: number | null,
     gps: { lat: number; lon: number } | null,
 ) {
+    // Simulate realistic vitals based on heart rate stress factor with jitter.
     const stress = Math.max(0, Math.min(1, (heartRate - 65) / 75));
     const jitter = () => (Math.random() - 0.5);
     return {
         heart_rate: heartRate,
-        systolic_bp: Math.round(110 + stress * 38 + jitter() * 5),
-        diastolic_bp: Math.round(68 + stress * 18 + jitter() * 4),
-        spo2: Math.round((98.8 - stress * 4.5 + jitter() * 0.8) * 10) / 10,
-        temperature_f: Math.round((98.3 + stress * 0.9 + jitter() * 0.3) * 10) / 10,
-        respiratory_rate: Math.round(13 + stress * 8 + jitter() * 2),
+        systolic_bp: Math.round(115 + stress * 35 + jitter() * 3),
+        diastolic_bp: Math.round(72 + stress * 15 + jitter() * 2),
+        spo2: Math.round((99.2 - stress * 3.5 + jitter() * 0.4) * 10) / 10,
+        temperature_f: Math.round((98.4 + stress * 0.8 + jitter() * 0.2) * 10) / 10,
+        respiratory_rate: Math.round(14 + stress * 6 + jitter() * 1),
+        ...(battery !== null && { battery_pct: battery }),
+        ...(gps && { latitude: gps.lat, longitude: gps.lon }),
+        source: 'WatchBridge',
+        recorded_at: new Date().toISOString()
+    };
+}
+
+function buildRealPayload(
+    heartRate: number,
+    battery: number | null,
+    gps: { lat: number; lon: number } | null,
+) {
+    // For real watch data we only send the measurements we actually have.
+    return {
+        heart_rate: heartRate,
         ...(battery !== null && { battery_pct: battery }),
         ...(gps && { latitude: gps.lat, longitude: gps.lon }),
         source: 'WatchBridge',
@@ -137,6 +153,14 @@ export default function WatchBridge() {
     const streamRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const gpsWRef = useRef<number | null>(null);
     const bcRef = useRef<BroadcastChannel | null>(null);
+    const hrRef = useRef<number | null>(null);
+    const batRef = useRef<number | null>(null);
+    const gpsRef = useRef<{ lat: number; lon: number } | null>(null);
+
+    useEffect(() => { hrRef.current = heartRate; }, [heartRate]);
+    useEffect(() => { batRef.current = battery; }, [battery]);
+    useEffect(() => { gpsRef.current = gps ? { lat: gps.lat, lon: gps.lon } : null; }, [gps]);
+
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const log = useCallback((msg: string) => {
@@ -377,28 +401,33 @@ export default function WatchBridge() {
         } catch { /* not available in some browsers */ }
 
         streamRef.current = setInterval(async () => {
-            let hr = heartRate;
+            // Use REFS to ensure we always have the absolute latest value 
+            // from the watch characteristic listeners, ignoring closure staleness.
+            let hr = hrRef.current;
 
             // In mock mode, we always simulate
-            // In real mode, we ONLY simulate if heartRate is null AND we want a lively demo.
-            // But to avoid the "72 vs 97" issue, if we have a real HR, we MUST use it.
             if (useMock) {
                 hr = 70 + Math.floor(Math.random() * 20);
             } else if (hr === null) {
                 // If watch is NOT connected or hasn't sent data, we can optionally mock
-                // for the 'lively' feel, but let's keep it 0 or null if we want strict real data.
-                // For now, let's keep a subtle mock only if not connected at all.
                 if (btStatus !== 'connected') {
                     hr = 70 + Math.floor(Math.random() * 10);
                 }
             }
 
-            const gpsNow = gps;
-            const batNow = battery;
-            const payload = buildPayload(hr, batNow, gpsNow ? { lat: gpsNow.lat, lon: gpsNow.lon } : null);
-
+            const gpsNow = gpsRef.current;
+            const batNow = batRef.current;
+            let payload;
+            if (useMock) {
+                const mockHR = 70 + Math.floor(Math.random() * 20);
+                payload = buildMockPayload(mockHR, batNow, gpsNow);
+            } else if (hr !== null) {
+                payload = buildRealPayload(hr, batNow, gpsNow);
+            } else {
+                // No heart rate data available; skip this iteration.
+                return;
+            }
             setLiveData(payload as LiveData);
-
             // 1. Instant caretaker update via BroadcastChannel (zero latency, no backend)
             try { bcRef.current?.postMessage({ ...payload, patient_id: pid }); } catch { /* */ }
 
@@ -657,14 +686,14 @@ export default function WatchBridge() {
                 </div>
 
                 {/* ── Live Heart Rate ────────────────────────────────────────────── */}
-                {(btStatus === 'connected' || (streaming && useMock)) && (
+                {(btStatus === 'connected' || streaming) && (
                     <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-5 text-center transition-all">
                         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-2">
                             <Heart className="h-3.5 w-3.5 text-red-400 animate-pulse" />
-                            {useMock ? 'Simulated Lively Heart Rate' : 'Live Heart Rate from Watch'}
+                            {useMock ? 'Simulated Lively Heart Rate' : (btStatus === 'connected' ? 'Live Heart Rate from Watch' : 'Simulated Heart Rate (Idle)')}
                         </div>
                         <div className="text-7xl font-black font-mono text-red-400 tabular-nums">
-                            {useMock ? (liveData?.heart_rate ?? '--') : (heartRate ?? '--')}
+                            {useMock || btStatus !== 'connected' ? (liveData?.heart_rate ?? '--') : (heartRate ?? '--')}
                         </div>
                         <div className="text-sm text-slate-400 mt-1">bpm</div>
                         {((useMock ? liveData?.heart_rate : heartRate) ?? 0) > 0 && (
