@@ -76,7 +76,74 @@ THRESHOLDS: dict[str, dict] = {
         "warning_high": 24,
         "critical_high": 30,
     },
+    "step_count": {
+        "unit": "steps",
+        "normal_low": 0,
+        "normal_high": 20000,
+        "warning_high": 40000,
+        "critical_high": 60000,
+    },
+    "sleep_hours": {
+        "unit": "hours",
+        "critical_low": 3,
+        "warning_low": 5,
+        "normal_low": 6,
+        "normal_high": 10,
+        "warning_high": 12,
+        "critical_high": 16,
+    },
+    "calories_burned": {
+        "unit": "kcal",
+        "normal_low": 0,
+        "normal_high": 4000,
+        "warning_high": 6000,
+        "critical_high": 8000,
+    },
+    "distance_m": {
+        "unit": "meters",
+        "normal_low": 0,
+        "normal_high": 15000,
+        "warning_high": 30000,
+        "critical_high": 50000,
+    },
+    "stress_score": {
+        "unit": "score",
+        "normal_low": 0,
+        "normal_high": 60,
+        "warning_high": 80,
+        "critical_high": 100,
+    },
+    "hrv": {
+        "unit": "ms",
+        "normal_low": 20,
+        "normal_high": 150,
+        "warning_low": 10,
+        "critical_low": 5,
+    },
 }
+
+def validate_reading(metric: str, value: float) -> bool:
+    """
+    Perform unrealistic reading checks (sanity filters).
+    Returns True if reading is realistic, False otherwise.
+    """
+    if metric == "heart_rate":
+        return 30 <= value <= 250
+    if metric == "spo2":
+        return 50 <= value <= 100
+    if metric == "temperature_f":
+        return 90 <= value <= 110
+    if metric == "step_count":
+        return 0 <= value <= 100000  # No human does 100k steps in a single sync period usually
+    if metric == "systolic_bp":
+        return 60 <= value <= 250
+    if metric == "diastolic_bp":
+        return 30 <= value <= 150
+    if metric == "stress_score":
+        return 0 <= value <= 100
+    if metric == "hrv":
+        return 1 <= value <= 300
+    return True
 
 SeverityLevel = Literal["normal", "warning", "critical"]
 

@@ -13,6 +13,7 @@ const Navbar = () => {
     { to: '/3d-view', label: '3D View' },
     { to: '/emergency', label: 'Emergency' },
     { to: '/caretaker', label: 'Caretaker' },
+    { to: '/iot-dashboard', label: 'IoT' },
     { to: '/wearable', label: 'Wearable' },
   ];
 

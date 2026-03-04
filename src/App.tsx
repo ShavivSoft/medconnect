@@ -7,6 +7,7 @@ import ThreeDView from './pages/ThreeDView';
 import Emergency from './pages/Emergency';
 import Auth from './pages/Auth';
 import Caretaker from './pages/Caretaker';
+import IoTDashboard from './pages/IoTDashboard';
 import WatchBridge from './pages/WatchBridge';
 import NotFound from './pages/NotFound';
 import { Toaster } from "@/components/ui/toaster";
@@ -26,6 +27,7 @@ function App() {
           <Route path="/login" element={<Auth />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/caretaker" element={<Caretaker />} />
+          <Route path="/iot-dashboard" element={<IoTDashboard />} />
           <Route path="/bridge" element={<WatchBridge />} />
           <Route path="/wearable" element={<WatchBridge />} />
           <Route path="*" element={<NotFound />} />

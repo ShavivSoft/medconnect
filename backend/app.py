@@ -578,11 +578,27 @@ def submit_vitals():
     timestamp = data.get("timestamp", datetime.datetime.utcnow().isoformat() + "Z")
 
     # Extract known vitals
-    VITAL_KEYS = ["heart_rate", "systolic_bp", "diastolic_bp", "spo2", "temperature_f", "respiratory_rate"]
-    current = {k: float(data[k]) for k in VITAL_KEYS if k in data}
+    VITAL_KEYS = [
+        "heart_rate", "systolic_bp", "diastolic_bp", "spo2", "temperature_f", "respiratory_rate",
+        "step_count", "calories_burned", "sleep_hours", "distance_m", "stress_score", "hrv"
+    ]
+    # Extract and validate metrics
+    from vitals_engine import validate_reading
+    current = {}
+    for k in VITAL_KEYS:
+        if k in data:
+            val = float(data[k])
+            if validate_reading(k, val):
+                current[k] = val
+            else:
+                logger.warning(f"Invalid reading ignored: {k}={val}")
+    
+    # Store device status if present
+    device_status = data.get("device_status", "Connected")
+    source = data.get("source", "MobileSync")
 
-    if not current:
-        return jsonify({"status": "error", "message": "No vital metrics in request."}), 400
+    if not current and not data.get("device_status"):
+        return jsonify({"status": "error", "message": "No vital metrics or status in request."}), 400
 
     # ── Load history for this patient ────────────────────────────────────────
     store = _load_json(VITALS_STORE_FILE, {})

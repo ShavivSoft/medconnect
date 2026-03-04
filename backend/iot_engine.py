@@ -22,7 +22,8 @@ _devices: dict = {}  # api_key → device info
 
 # ── Device Types ──────────────────────────────────────────────────────────────
 DEVICE_TYPES = {
-    "smartwatch":  {"label": "Smart Watch",     "emoji": "⌚", "metrics": ["heart_rate","spo2","respiratory_rate","temperature_f"]},
+    "smartwatch":  {"label": "Smart Watch",     "emoji": "⌚", "metrics": ["heart_rate","spo2","respiratory_rate","temperature_f","step_count","sleep_hours","calories_burned","distance_m"]},
+    "health_framework": {"label": "Native Health", "emoji": "📱", "metrics": ["heart_rate","spo2","step_count","sleep_hours","calories_burned","distance_m","activity_workouts"]},
     "bp_monitor":  {"label": "BP Monitor",      "emoji": "💊", "metrics": ["systolic_bp","diastolic_bp","heart_rate"]},
     "oximeter":    {"label": "Pulse Oximeter",  "emoji": "🩸", "metrics": ["spo2","heart_rate"]},
     "custom":      {"label": "Custom Device",   "emoji": "🔧", "metrics": ["heart_rate","systolic_bp","diastolic_bp","spo2","temperature_f","respiratory_rate"]},
@@ -197,9 +198,15 @@ def ingest_iot_reading(device: dict, reading: dict) -> dict:
                 "spo2":             reading.get("spo2"),
                 "temperature_f":    reading.get("temperature_f"),
                 "respiratory_rate": reading.get("respiratory_rate"),
+                "step_count":       reading.get("step_count"),
+                "sleep_hours":      reading.get("sleep_hours"),
+                "calories_burned":  reading.get("calories_burned"),
+                "distance_m":       reading.get("distance_m"),
                 "latitude":         reading.get("latitude"),
                 "longitude":        reading.get("longitude"),
                 "battery_pct":      reading.get("battery_pct"),
+                "source_device_model": reading.get("source_device_model"),
+                "is_validated":     reading.get("is_validated", True),
                 "recorded_at":      enriched["recorded_at"],
             }
             sb.table("vitals").insert({k: v for k, v in row.items() if v is not None}).execute()
@@ -209,22 +216,52 @@ def ingest_iot_reading(device: dict, reading: dict) -> dict:
 
     # Also run through vitals analysis engine
     try:
-        from vitals_engine import check_all_thresholds, analyze_trend, generate_risk_flags
+        from vitals_engine import check_all_thresholds, analyze_trend, generate_risk_flags, validate_reading
         from app import _load_vitals_store, _save_vitals_store
 
         store = _load_vitals_store()
         if patient_id not in store:
             store[patient_id] = {}
-        metrics = ["heart_rate","systolic_bp","diastolic_bp","spo2","temperature_f","respiratory_rate"]
-        for m in metrics:
-            if m in reading:
-                store[patient_id].setdefault(m, [])
-                store[patient_id][m].append({"value": reading[m], "ts": enriched["recorded_at"]})
-                store[patient_id][m] = store[patient_id][m][-100:]
+        metrics = [
+            "heart_rate", "systolic_bp", "diastolic_bp", "spo2", "temperature_f", 
+            "respiratory_rate", "step_count", "sleep_hours", "calories_burned", "distance_m"
+        ]
+        
+        # Validation checks
+        validated_reading = {k: v for k, v in reading.items() if k in metrics}
+        for m, v in list(validated_reading.items()):
+            if not validate_reading(m, v):
+                logger.warning(f"Rejecting unrealistic {m}: {v}")
+                validated_reading.pop(m)
+
+        for m, v in validated_reading.items():
+            store[patient_id].setdefault(m, [])
+            store[patient_id][m].append({"value": v, "ts": enriched["recorded_at"]})
+            store[patient_id][m] = store[patient_id][m][-100:]
         _save_vitals_store(store)
 
-        thresholds = check_all_thresholds(reading)
-        risk_flags = generate_risk_flags(reading, [], thresholds)
+        thresholds = check_all_thresholds(validated_reading)
+        risk_flags = generate_risk_flags(validated_reading, [], thresholds)
+        
+        # ACTUALLY TRIGGER EMERGENCY if critical
+        auto_emergency_triggered = False
+        for t in thresholds:
+            is_auto = t.get("auto_emergency") if isinstance(t, dict) else getattr(t, "auto_emergency", False)
+            if is_auto:
+                try:
+                    from emergency_engine import trigger_emergency
+                    msg = t.get("message") if isinstance(t, dict) else getattr(t, "message", "Critical VITALS")
+                    trigger_emergency(
+                        patient_id=patient_id,
+                        trigger_source="VITALS_CRITICAL",
+                        medical_context=msg,
+                        vitals_snapshot=reading
+                    )
+                    auto_emergency_triggered = True
+                    break
+                except Exception as ee:
+                    logger.error(f"Failed to auto-trigger emergency: {ee}")
+
         return {
             "status":        "ok",
             "patient_id":    patient_id,
@@ -233,10 +270,7 @@ def ingest_iot_reading(device: dict, reading: dict) -> dict:
             "timestamp":     enriched["recorded_at"],
             "thresholds":    [t.__dict__ if hasattr(t, '__dict__') else t for t in thresholds],
             "risk_flags":    [r.__dict__ if hasattr(r, '__dict__') else r for r in risk_flags],
-            "auto_emergency_triggered": any(
-                (t.get("auto_emergency") if isinstance(t, dict) else getattr(t, "auto_emergency", False))
-                for t in thresholds
-            ),
+            "auto_emergency_triggered": auto_emergency_triggered,
         }
     except Exception as e:
         logger.warning(f"Analysis engine error: {e}")

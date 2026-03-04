@@ -13,6 +13,7 @@ export interface AuthUser {
     name: string;
     token: string;
     permissions: string[];
+    patient_id?: string;
 }
 
 // ─── Vitals ───────────────────────────────────────────────────────────────────
@@ -24,13 +25,16 @@ export interface VitalsReading {
     spo2?: number;
     temperature_f?: number;
     respiratory_rate?: number;
-    // Native Health Framework extras
     step_count?: number;
-    sleep_hours?: number;
     calories_burned?: number;
+    sleep_hours?: number;
     distance_m?: number;
+    stress_score?: number;
+    hrv?: number;
+    // Native Health Framework extras
     source_device_model?: string;
     is_validated?: boolean;
+    device_status?: string;
 }
 
 export type SeverityLevel = 'normal' | 'warning' | 'critical';
