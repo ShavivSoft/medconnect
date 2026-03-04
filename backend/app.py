@@ -770,14 +770,15 @@ def iot_deregister(device_id):
 
 
 @app.route('/api/iot/submit', methods=['POST'])
+@app.route('/api/iot/data', methods=['POST'])
 def iot_submit_data():
     """
     Ingest data from an IoT device.
-    Headers: X-API-Key
+    Headers: X-API-Key or X-Device-Key
     """
-    api_key = request.headers.get("X-API-Key")
+    api_key = request.headers.get("X-API-Key") or request.headers.get("X-Device-Key")
     if not api_key:
-        return jsonify({"status": "error", "message": "X-API-Key header required"}), 401
+        return jsonify({"status": "error", "message": "API key header required (X-API-Key or X-Device-Key)"}), 401
         
     device = authenticate_device(api_key)
     if not device:
