@@ -18,15 +18,31 @@ import type {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function apiLogin(
-    userId: string, role: 'PATIENT' | 'CARETAKER', name: string
+    email: string, password?: string
 ): Promise<AuthUser> {
     const res = await fetch(`${BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, role, name }),
+        body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message ?? 'Login failed');
+    return data as AuthUser;
+}
+
+export async function apiRegister(payload: {
+    name: string; email: string; password?: string;
+    role: 'PATIENT' | 'CARETAKER';
+    age?: number; phone?: string; emergency_contact?: string;
+    relationship?: string;
+}): Promise<AuthUser> {
+    const res = await fetch(`${BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message ?? 'Registration failed');
     return data as AuthUser;
 }
 
@@ -139,6 +155,19 @@ export async function apiGetEmergencyAudit() {
 
 export async function apiGetCaretakerPatients(): Promise<{ status: string; patients: PatientSummary[] }> {
     const res = await fetch(`${BASE}/api/caretaker/patients`);
+    return res.json();
+}
+
+export async function apiConnectPatient(patientId: string) {
+    const auth = loadAuthFromStorage();
+    const res = await fetch(`${BASE}/api/caretaker/connect`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth?.token}`
+        },
+        body: JSON.stringify({ patient_id: patientId }),
+    });
     return res.json();
 }
 

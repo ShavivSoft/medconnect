@@ -6,10 +6,28 @@ Falls back to local file storage if Supabase is not configured.
 import os
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+def _load_json(path: str, default):
+    try:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return default
+
+def _save_json(path: str, data):
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=str)
+    except Exception as e:
+        logger.error(f"Save failed {path}: {e}")
+
 
 # ── Supabase client (optional) ────────────────────────────────────────────────
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
@@ -34,6 +52,176 @@ def get_client():
 
 SUPABASE_ENABLED = bool(SUPABASE_URL and SUPABASE_KEY)
 
+# ── USERS & AUTH ──────────────────────────────────────────────────────────────
+
+def register_user(name: str, email: str, password_hash: str, role: str, additional_info: Optional[dict] = None) -> Optional[dict]:
+    """Register a new user in Supabase or local store."""
+    sb = get_client()
+    user_id = str(uuid.uuid4())
+    
+    if sb:
+        try:
+            user_row = {
+                "user_id": user_id,
+                "name": name,
+                "email": email,
+                "password_hash": password_hash,
+                "role": role,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            sb.table("users").insert(user_row).execute()
+            
+            if role == "PATIENT":
+                patient_id = generate_unique_patient_id(email)
+                info = additional_info or {}
+                patient_row = {
+                    "user_id": user_id,
+                    "patient_id": patient_id,
+                    "age": info.get("age"),
+                    "phone": info.get("phone"),
+                    "emergency_contact": info.get("emergency_contact")
+                }
+                sb.table("patients").insert(patient_row).execute()
+                user_row["patient_id"] = patient_id
+            elif role == "CARETAKER":
+                info = additional_info or {}
+                caretaker_row = {
+                    "user_id": user_id,
+                    "phone": info.get("phone"),
+                    "relationship": info.get("relationship")
+                }
+                sb.table("caretakers").insert(caretaker_row).execute()
+                
+            return user_row
+        except Exception as e:
+            logger.error(f"Registration error (Supabase): {e}")
+            return None
+    else:
+        # Fallback to local JSON (simplified for demo)
+        users = _load_json("users.json", [])
+        if any(u["email"] == email for u in users):
+            return None
+            
+        user_row = {
+            "user_id": user_id,
+            "name": name,
+            "email": email,
+            "password_hash": password_hash,
+            "role": role,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if role == "PATIENT":
+            patient_id = generate_unique_patient_id(email)
+            user_row["patient_id"] = patient_id
+            user_row.update(additional_info or {})
+        
+        users.append(user_row)
+        _save_json("users.json", users)
+        return user_row
+
+def get_user_by_email(email: str) -> Optional[dict]:
+    """Fetch user by email."""
+    sb = get_client()
+    if sb:
+        try:
+            res = sb.table("users").select("*").eq("email", email).execute()
+            if res.data:
+                user = res.data[0]
+                if user["role"] == "PATIENT":
+                    p_res = sb.table("patients").select("patient_id").eq("user_id", user["user_id"]).execute()
+                    if p_res.data:
+                        user["patient_id"] = p_res.data[0]["patient_id"]
+                return user
+        except Exception as e:
+            logger.error(f"User fetch error: {e}")
+    else:
+        users = _load_json("users.json", [])
+        for u in users:
+            if u["email"] == email:
+                return u
+    return None
+
+def generate_unique_patient_id(email: str) -> str:
+    """
+    Generate a unique MC-XXXX Patient ID.
+    Length dynamic based on email length as requested.
+    """
+    import random
+    import string
+    
+    # Logic:
+    # If email length <= 6 -> ID length = 4-6
+    # If email length 7-12 -> ID length = 6-8
+    # If email length > 12 -> ID length = 8-12
+    email_len = len(email)
+    if email_len <= 6:
+        length = random.randint(4, 6)
+    elif email_len <= 12:
+        length = random.randint(6, 8)
+    else:
+        length = random.randint(8, 12)
+        
+    chars = string.digits + string.ascii_uppercase
+    
+    # Try generating until unique
+    while True:
+        suffix = ''.join(random.choice(chars) for _ in range(length))
+        candidate = f"MC-{suffix}"
+        
+        # Check uniqueness
+        if not is_patient_id_taken(candidate):
+            return candidate
+
+def is_patient_id_taken(patient_id: str) -> bool:
+    """Check if patient ID is already used."""
+    sb = get_client()
+    if sb:
+        try:
+            res = sb.table("patients").select("patient_id").eq("patient_id", patient_id).execute()
+            return len(res.data) > 0
+        except:
+            return False
+    else:
+        users = _load_json("users.json", [])
+        return any(u.get("patient_id") == patient_id for u in users)
+    return False
+
+def link_caretaker_patient(caretaker_id: str, patient_id: str) -> bool:
+    """Create a connection request from caretaker to patient."""
+    sb = get_client()
+    if sb:
+        try:
+            # Check if patient exists
+            p_res = sb.table("patients").select("user_id").eq("patient_id", patient_id).execute()
+            if not p_res.data:
+                return False
+                
+            sb.table("caretaker_patient_map").insert({
+                "caretaker_id": caretaker_id,
+                "patient_id": patient_id,
+                "status": "PENDING",
+                "requested_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Linking error: {e}")
+            return False
+    else:
+        # Local mock
+        links = _load_json("links.json", [])
+        links.append({
+            "caretaker_id": caretaker_id,
+            "patient_id": patient_id,
+            "status": "APPROVED", # Auto-approve in demo mode
+            "requested_at": datetime.now(timezone.utc).isoformat()
+        })
+        _save_json("links.json", links)
+        return True
+
+import uuid
+
+
 # ── VITALS ─────────────────────────────────────────────────────────────────────
 
 def store_vitals(patient_id: str, reading: dict) -> bool:
@@ -50,6 +238,12 @@ def store_vitals(patient_id: str, reading: dict) -> bool:
             "spo2":             reading.get("spo2"),
             "temperature_f":    reading.get("temperature_f"),
             "respiratory_rate": reading.get("respiratory_rate"),
+            "step_count":       reading.get("step_count"),
+            "sleep_hours":      reading.get("sleep_hours"),
+            "calories_burned":  reading.get("calories_burned"),
+            "distance_m":       reading.get("distance_m"),
+            "source_device_model": reading.get("source_device_model"),
+            "is_validated":     reading.get("is_validated", True),
             "recorded_at":      datetime.now(timezone.utc).isoformat(),
         }
         row = {k: v for k, v in row.items() if v is not None}
@@ -225,7 +419,7 @@ def fetch_active_emergency(patient_id: str) -> Optional[dict]:
 
 # ── AUDIT LOG ──────────────────────────────────────────────────────────────────
 
-def append_audit(event_type: str, patient_id: str, details: dict = None) -> bool:
+def append_audit(event_type: str, patient_id: str, details: Optional[dict] = None) -> bool:
     """Write an audit entry to Supabase."""
     sb = get_client()
     if not sb:

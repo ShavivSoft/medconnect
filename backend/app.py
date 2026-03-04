@@ -88,6 +88,13 @@ from rbac import (
     optional_auth,
     ROLE_PERMISSIONS,
 )
+from database import (
+    register_user,
+    get_user_by_email,
+    link_caretaker_patient,
+    fetch_vitals_history,
+    fetch_all_patients_vitals,
+)
 
 # ── App Setup ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -450,32 +457,76 @@ def generate_summary(text: str, language: str = "English", file_bytes: bytes = b
 # ── AUTH ROUTES ───────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 
+@app.route('/api/auth/register', methods=['POST'])
+def auth_register():
+    """Register a new user with role-specific fields."""
+    data = request.get_json(force=True) or {}
+    email = data.get("email")
+    password = data.get("password")
+    name = data.get("name")
+    role = data.get("role", "PATIENT").upper()
+    
+    if not email or not password or not name:
+        return jsonify({"status": "error", "message": "Missing required fields"}), 400
+        
+    password_hash = f"hash_{password}" 
+    
+    additional_info = {
+        "age": data.get("age"),
+        "phone": data.get("phone"),
+        "emergency_contact": data.get("emergency_contact"),
+        "relationship": data.get("relationship")
+    }
+    
+    user = register_user(name, email, password_hash, role, additional_info)
+    if not user:
+        return jsonify({"status": "error", "message": "Email already registered or registration failed"}), 400
+        
+    token = generate_token(user["user_id"], user["role"], user["name"])
+    return jsonify({
+        "status": "ok",
+        "token": token,
+        "user_id": user["user_id"],
+        "role": user["role"],
+        "name": user["name"],
+        "patient_id": user.get("patient_id"),
+        "permissions": sorted(ROLE_PERMISSIONS.get(user["role"], [])),
+    })
+
 @app.route('/api/auth/login', methods=['POST'])
 def auth_login():
-    """
-    Issue a role-scoped JWT.
-    Body: { user_id, role, name }
-
-    In production: validate credentials against DB first.
-    """
+    """Authenticate user and issue JWT."""
     data = request.get_json(force=True) or {}
-    user_id = data.get("user_id", str(uuid.uuid4()))
-    role = data.get("role", "PATIENT").upper()
-    name = data.get("name", "")
-
-    if role not in ("PATIENT", "CARETAKER", "ADMIN"):
-        return jsonify({"status": "error", "message": "Invalid role"}), 400
+    email = data.get("email")
+    password = data.get("password")
+    
+    if not email or not password:
+        user_id = data.get("user_id", str(uuid.uuid4()))
+        role = data.get("role", "PATIENT").upper()
+        name = data.get("name", "Demo User")
+    else:
+        user = get_user_by_email(email)
+        if not user or user["password_hash"] != f"hash_{password}":
+            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+        
+        user_id = user["user_id"]
+        role = user["role"]
+        name = user["name"]
+        patient_id = user.get("patient_id")
 
     try:
         token = generate_token(user_id, role, name)
-        return jsonify({
+        res = {
             "status": "ok",
             "token": token,
             "user_id": user_id,
             "role": role,
             "name": name,
             "permissions": sorted(ROLE_PERMISSIONS.get(role, [])),
-        })
+        }
+        if 'patient_id' in locals() and patient_id:
+            res["patient_id"] = patient_id
+        return jsonify(res)
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -623,6 +674,21 @@ def get_vitals_history(patient_id):
         "smoothed": smoothed,
         "summary": summary,
     })
+
+@app.route('/api/caretaker/connect', methods=['POST'])
+@require_role('CARETAKER')
+def caretaker_connect_patient():
+    """Allow caretaker to link a patient via Patient ID."""
+    data = request.get_json(force=True) or {}
+    patient_id = data.get("patient_id")
+    if not patient_id:
+        return jsonify({"status": "error", "message": "Patient ID is required"}), 400
+        
+    success = link_caretaker_patient(g.user_id, patient_id)
+    if success:
+        return jsonify({"status": "ok", "message": "Connection request sent successfully"})
+    else:
+        return jsonify({"status": "error", "message": "Invalid Patient ID or already linked"}), 400
 
 
 @app.route('/api/analytics/summary/<patient_id>', methods=['GET'])
@@ -1316,7 +1382,10 @@ def iot_ingest():
     )
 
     # Validate — at least one metric must be present
-    metric_fields = ["heart_rate","systolic_bp","diastolic_bp","spo2","temperature_f","respiratory_rate"]
+    metric_fields = [
+        "heart_rate", "systolic_bp", "diastolic_bp", "spo2", "temperature_f", 
+        "respiratory_rate", "step_count", "sleep_hours", "calories_burned", "distance_m"
+    ]
     if not any(data.get(f) is not None for f in metric_fields):
         return jsonify({"status": "error", "message": "No metric values provided"}), 400
 

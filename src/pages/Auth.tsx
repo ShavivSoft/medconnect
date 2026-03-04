@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Heart, Mail, Lock, User, ArrowLeft, Shield, UserCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiLogin, saveAuthToStorage } from "@/lib/connectCareApi";
+import { apiLogin, apiRegister, saveAuthToStorage } from "@/lib/connectCareApi";
 import { supabase, SUPABASE_ENABLED, supabaseSignIn, supabaseSignUp } from "@/lib/supabase";
 
 
@@ -24,6 +24,12 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Extra fields
+  const [age, setAge] = useState("");
+  const [phone, setPhone] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
+  const [relationship, setRelationship] = useState("Family");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +60,31 @@ const Auth = () => {
       }
 
       // ── Tier 2: Backend JWT ───────────────────────────────────────────────
-      const userId = email.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      const displayName = name || email.split("@")[0];
-      const authUser = await apiLogin(userId, role, displayName);
+      let authUser;
+      if (isSignUp) {
+        authUser = await apiRegister({
+          name,
+          email,
+          password,
+          role,
+          age: role === "PATIENT" ? parseInt(age) : undefined,
+          phone,
+          emergency_contact: role === "PATIENT" ? emergencyContact : undefined,
+          relationship: role === "CARETAKER" ? relationship : undefined,
+        });
+      } else {
+        authUser = await apiLogin(email, password);
+      }
+
       saveAuthToStorage(authUser);
-      toast({ title: `Welcome, ${authUser.name}!`, description: `Signed in as ${authUser.role}` });
+      toast({
+        title: isSignUp ? "Account Created!" : `Welcome back, ${authUser.name}!`,
+        description: isSignUp ? `Your unique ID: ${authUser.patient_id || 'Generating...'}` : `Signed in as ${authUser.role}`
+      });
       navigate(authUser.role === "CARETAKER" ? "/caretaker" : "/dashboard");
-    } catch {
+    } catch (err: any) {
       // ── Tier 3: Demo mode (offline fallback) ─────────────────────────────
+      console.error("Auth failed:", err);
       const userId = email.toLowerCase().replace(/[^a-z0-9]/g, "_");
       const fallbackUser = { user_id: userId, role, name: name || email.split("@")[0], token: "demo-token", permissions: [] };
       saveAuthToStorage(fallbackUser);
@@ -153,6 +176,63 @@ const Auth = () => {
                 </div>
               </div>
 
+              {isSignUp && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {role === "PATIENT" ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="age">Age</Label>
+                        <Input
+                          id="age"
+                          type="number"
+                          placeholder="Your age"
+                          value={age}
+                          onChange={e => setAge(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emergency">Emergency Contact</Label>
+                        <Input
+                          id="emergency"
+                          placeholder="Name or Phone"
+                          value={emergencyContact}
+                          onChange={e => setEmergencyContact(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="relationship">Relationship to Patient</Label>
+                      <select
+                        id="relationship"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={relationship}
+                        onChange={e => setRelationship(e.target.value)}
+                      >
+                        <option value="Family">Family</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Nurse">Nurse</option>
+                        <option value="Friend">Friend</option>
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Role selector — always visible */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
@@ -215,8 +295,8 @@ const Auth = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

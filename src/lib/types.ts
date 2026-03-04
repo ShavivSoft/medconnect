@@ -24,6 +24,13 @@ export interface VitalsReading {
     spo2?: number;
     temperature_f?: number;
     respiratory_rate?: number;
+    // Native Health Framework extras
+    step_count?: number;
+    sleep_hours?: number;
+    calories_burned?: number;
+    distance_m?: number;
+    source_device_model?: string;
+    is_validated?: boolean;
 }
 
 export type SeverityLevel = 'normal' | 'warning' | 'critical';

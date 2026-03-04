@@ -20,12 +20,13 @@ import {
     Droplets, Wind, TrendingUp, TrendingDown, Minus,
     Shield, Bell, Eye, EyeOff, BarChart3, Watch, Wifi,
     WifiOff, Battery, BatteryLow, Zap, Plus, Trash2,
-    XCircle, ArrowLeft, Bluetooth, BluetoothOff
+    XCircle, ArrowLeft, Bluetooth, BluetoothOff, Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
     apiGetCaretakerPatients, apiGetAnalytics,
     apiCaretakerOverride, apiResolveEmergency, loadAuthFromStorage,
+    apiConnectPatient
 } from '@/lib/connectCareApi';
 import { supabase, SUPABASE_ENABLED } from '@/lib/supabase';
 import type { PatientSummary, AnalyticsPeriod, TrendDirection } from '@/lib/types';
@@ -559,6 +560,8 @@ const Caretaker = () => {
     const [showAudit, setShowAudit] = useState(false);
     const [showDevices, setShowDevices] = useState(false);
     const [selPatient, setSelPatient] = useState('');
+    const [connectId, setConnectId] = useState('');
+    const [connecting, setConnecting] = useState(false);
 
     // ── Fetch patients ─────────────────────────────────────────────────────────
     const refresh = useCallback(async () => {
@@ -600,6 +603,25 @@ const Caretaker = () => {
         };
         return () => bc.close();
     }, [refresh, toast]);
+
+    const handleConnect = async () => {
+        if (!connectId) return;
+        setConnecting(true);
+        try {
+            const res = await apiConnectPatient(connectId);
+            if (res.status === 'ok') {
+                toast({ title: "Patient Linked!", description: `Connected to ${connectId}` });
+                setConnectId('');
+                void refresh();
+            } else {
+                toast({ title: "Failed", description: res.message, variant: "destructive" });
+            }
+        } catch (err: any) {
+            toast({ title: "Error", description: err.message, variant: "destructive" });
+        } finally {
+            setConnecting(false);
+        }
+    };
 
     const fetchAudit = useCallback(async () => {
         try {
@@ -690,6 +712,23 @@ const Caretaker = () => {
 
                     {/* Right: actions */}
                     <div className="flex items-center gap-2">
+                        <div className="flex bg-slate-900 border border-slate-700 rounded-lg p-1 overflow-hidden">
+                            <input
+                                type="text"
+                                placeholder="Patient ID (MC-XXXX)"
+                                className="bg-transparent border-none text-[10px] px-2 py-1 focus:outline-none text-white w-32 md:w-40"
+                                value={connectId}
+                                onChange={e => setConnectId(e.target.value)}
+                            />
+                            <button
+                                onClick={handleConnect}
+                                disabled={connecting}
+                                className="h-6 text-[10px] font-bold px-2 rounded bg-teal-600/20 text-teal-400 hover:bg-teal-600/30 transition-all disabled:opacity-50"
+                            >
+                                {connecting ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : "Link"}
+                            </button>
+                        </div>
+
                         <button onClick={() => { void refresh(); }} disabled={loading}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 border border-slate-700 hover:border-teal-500 hover:text-teal-400 transition-all disabled:opacity-50">
                             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} /> Refresh
