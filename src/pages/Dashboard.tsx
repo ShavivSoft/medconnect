@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Heart, Activity, Thermometer, Droplets, Server,
   CheckCircle2, XCircle, Loader2, Bluetooth, Watch,
-  Footprints, Zap, Brain, Wind, Wifi, WifiOff, Clock
+  Footprints, Zap, Brain, Wind, Wifi, WifiOff, Clock, AlertTriangle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { checkHealth, HealthCheckResponse } from "@/lib/api";
 import { supabase, SUPABASE_ENABLED } from "@/lib/supabase";
 import { HealthSyncManager } from '@/components/HealthSyncManager';
@@ -187,147 +188,161 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
+          <Button
+            onClick={() => {
+              const bc = new BroadcastChannel("medconnect_emergency");
+              bc.postMessage("CRASH_DETECTED");
+              setTimeout(() => {
+                window.location.href = "/emergency";
+              }, 100);
+            }}
+            variant="destructive"
+            className="rounded-full font-black text-xs italic animate-pulse h-10 px-5 shadow-lg shadow-red-200"
+          >
+            <AlertTriangle className="mr-2 h-4 w-4" /> SIMULATE ACCIDENT
+          </Button>
         </div>
+      </div>
 
-        {/* Primary Vitals Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <MetricCard
-            icon={<Heart className="h-4 w-4 text-red-500" />}
-            label="Heart Rate"
-            value={vitals?.heart_rate}
-            unit="bpm"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-red-600"
-          />
-          <MetricCard
-            icon={<Droplets className="h-4 w-4 text-cyan-500" />}
-            label="Oxygen Saturation"
-            value={vitals?.spo2}
-            unit="%"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-cyan-600"
-          />
-          <MetricCard
-            icon={<Activity className="h-4 w-4 text-blue-500" />}
-            label="Blood Pressure"
-            value={vitals?.systolic_bp ? `${vitals.systolic_bp}/${vitals.diastolic_bp}` : undefined}
-            unit="mmHg"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-blue-600"
-          />
-          <MetricCard
-            icon={<Thermometer className="h-4 w-4 text-orange-500" />}
-            label="Skin Temperature"
-            value={vitals?.temperature_f}
-            unit="°F"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-orange-600"
-          />
-        </div>
+      {/* Primary Vitals Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <MetricCard
+          icon={<Heart className="h-4 w-4 text-red-500" />}
+          label="Heart Rate"
+          value={vitals?.heart_rate}
+          unit="bpm"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-red-600"
+        />
+        <MetricCard
+          icon={<Droplets className="h-4 w-4 text-cyan-500" />}
+          label="Oxygen Saturation"
+          value={vitals?.spo2}
+          unit="%"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-cyan-600"
+        />
+        <MetricCard
+          icon={<Activity className="h-4 w-4 text-blue-500" />}
+          label="Blood Pressure"
+          value={vitals?.systolic_bp ? `${vitals.systolic_bp}/${vitals.diastolic_bp}` : undefined}
+          unit="mmHg"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-blue-600"
+        />
+        <MetricCard
+          icon={<Thermometer className="h-4 w-4 text-orange-500" />}
+          label="Skin Temperature"
+          value={vitals?.temperature_f}
+          unit="°F"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-orange-600"
+        />
+      </div>
 
-        {/* Wearable Activity Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <MetricCard
-            icon={<Footprints className="h-4 w-4 text-emerald-500" />}
-            label="Daily Steps"
-            value={vitals?.step_count ? vitals.step_count.toLocaleString() : undefined}
-            unit="steps"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-emerald-600"
-          />
-          <MetricCard
-            icon={<Zap className="h-4 w-4 text-amber-500" />}
-            label="Calories Burned"
-            value={vitals?.calories_burned}
-            unit="kcal"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-amber-600"
-          />
-          <MetricCard
-            icon={<Brain className="h-4 w-4 text-indigo-500" />}
-            label="Stress Level"
-            value={vitals?.stress_score}
-            unit="score"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-indigo-600"
-          />
-          <MetricCard
-            icon={<Wind className="h-4 w-4 text-violet-500" />}
-            label="Respiratory Rate"
-            value={vitals?.respiratory_rate}
-            unit="/min"
-            recordedAt={vitals?.recordedAt}
-            colorClass="text-violet-600"
-          />
-        </div>
+      {/* Wearable Activity Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <MetricCard
+          icon={<Footprints className="h-4 w-4 text-emerald-500" />}
+          label="Daily Steps"
+          value={vitals?.step_count ? vitals.step_count.toLocaleString() : undefined}
+          unit="steps"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-emerald-600"
+        />
+        <MetricCard
+          icon={<Zap className="h-4 w-4 text-amber-500" />}
+          label="Calories Burned"
+          value={vitals?.calories_burned}
+          unit="kcal"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-amber-600"
+        />
+        <MetricCard
+          icon={<Brain className="h-4 w-4 text-indigo-500" />}
+          label="Stress Level"
+          value={vitals?.stress_score}
+          unit="score"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-indigo-600"
+        />
+        <MetricCard
+          icon={<Wind className="h-4 w-4 text-violet-500" />}
+          label="Respiratory Rate"
+          value={vitals?.respiratory_rate}
+          unit="/min"
+          recordedAt={vitals?.recordedAt}
+          colorClass="text-violet-600"
+        />
+      </div>
 
-        {/* System Summary Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Backend Status Card */}
-          <Card className="border-slate-200">
-            <CardHeader className="border-b bg-slate-50/50 py-4">
-              <CardTitle className="flex items-center gap-2 text-sm text-slate-600">
-                <Server className="h-4 w-4" /> AI Backend Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap items-center gap-6">
-                <div className="flex items-center gap-2">
-                  {backendStatus === 'checking' && (
-                    <><Loader2 className="h-4 w-4 animate-spin text-slate-400" /><span className="text-sm text-muted-foreground">Checking...</span></>
-                  )}
-                  {backendStatus === 'online' && (
-                    <><CheckCircle2 className="h-4 w-4 text-green-500" /><span className="text-sm font-bold text-green-600 uppercase tracking-tight">System Online</span></>
-                  )}
-                  {backendStatus === 'offline' && (
-                    <><XCircle className="h-4 w-4 text-red-500" /><span className="text-sm font-bold text-red-600 uppercase tracking-tight">System Offline</span></>
-                  )}
-                </div>
-
-                {backendStatus === 'online' && backendInfo?.services && (
-                  <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">OCR</Badge>
-                    <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">NLP</Badge>
-                    <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">DIAGNOSTIC AI</Badge>
-                  </div>
+      {/* System Summary Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Backend Status Card */}
+        <Card className="border-slate-200">
+          <CardHeader className="border-b bg-slate-50/50 py-4">
+            <CardTitle className="flex items-center gap-2 text-sm text-slate-600">
+              <Server className="h-4 w-4" /> AI Backend Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                {backendStatus === 'checking' && (
+                  <><Loader2 className="h-4 w-4 animate-spin text-slate-400" /><span className="text-sm text-muted-foreground">Checking...</span></>
+                )}
+                {backendStatus === 'online' && (
+                  <><CheckCircle2 className="h-4 w-4 text-green-500" /><span className="text-sm font-bold text-green-600 uppercase tracking-tight">System Online</span></>
+                )}
+                {backendStatus === 'offline' && (
+                  <><XCircle className="h-4 w-4 text-red-500" /><span className="text-sm font-bold text-red-600 uppercase tracking-tight">System Offline</span></>
                 )}
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Device Context Card */}
-          <Card className="border-slate-200">
-            <CardHeader className="border-b bg-slate-50/50 py-4">
-              <CardTitle className="flex items-center gap-2 text-sm text-slate-600">
-                <Bluetooth className="h-4 w-4" /> Wearable Sources
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Watch className="h-5 w-5 text-teal-500" />
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 leading-tight">MedConnect Virtual Watch</p>
-                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Firmware v2.4.1 · BT LE 5.0</p>
-                  </div>
+              {backendStatus === 'online' && backendInfo?.services && (
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">OCR</Badge>
+                  <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">NLP</Badge>
+                  <Badge variant="outline" className="bg-white border-slate-200 text-[9px]">DIAGNOSTIC AI</Badge>
                 </div>
-                <Link
-                  to="/bridge"
-                  className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100 transition-colors uppercase"
-                >
-                  Manage Devices
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="mt-12 text-center">
-          <div className="h-1 w-20 bg-slate-200 mx-auto rounded-full mb-6"></div>
-          <p className="text-sm text-slate-500">
-            Need to analyze a new medical report? <Link to="/reports" className="text-blue-600 font-bold hover:underline">Upload here →</Link>
-          </p>
-        </div>
+        {/* Device Context Card */}
+        <Card className="border-slate-200">
+          <CardHeader className="border-b bg-slate-50/50 py-4">
+            <CardTitle className="flex items-center gap-2 text-sm text-slate-600">
+              <Bluetooth className="h-4 w-4" /> Wearable Sources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Watch className="h-5 w-5 text-teal-500" />
+                <div>
+                  <p className="text-xs font-bold text-slate-900 leading-tight">MedConnect Virtual Watch</p>
+                  <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Firmware v2.4.1 · BT LE 5.0</p>
+                </div>
+              </div>
+              <Link
+                to="/bridge"
+                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100 transition-colors uppercase"
+              >
+                Manage Devices
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-12 text-center">
+        <div className="h-1 w-20 bg-slate-200 mx-auto rounded-full mb-6"></div>
+        <p className="text-sm text-slate-500">
+          Need to analyze a new medical report? <Link to="/reports" className="text-blue-600 font-bold hover:underline">Upload here →</Link>
+        </p>
       </div>
     </div>
   );

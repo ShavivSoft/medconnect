@@ -217,7 +217,7 @@ def ingest_iot_reading(device: dict, reading: dict) -> dict:
     # Also run through vitals analysis engine
     try:
         from vitals_engine import check_all_thresholds, analyze_trend, generate_risk_flags, validate_reading
-        from app import _load_vitals_store, _save_vitals_store
+        from storage_utils import _load_vitals_store, _save_vitals_store
 
         store = _load_vitals_store()
         if patient_id not in store:

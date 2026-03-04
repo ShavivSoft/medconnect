@@ -316,6 +316,13 @@ export default function IoTDashboard() {
                                 <WifiOff className="h-3 w-3" /> Supabase not configured
                             </Badge>
                         )}
+                        <Button
+                            onClick={() => window.location.href = "tel:108"}
+                            variant="destructive"
+                            className="h-9 px-5 rounded-full font-black text-xs italic tracking-widest animate-pulse border-2 border-white/20 shadow-lg shadow-red-950/20"
+                        >
+                            <AlertTriangle className="mr-2 h-4 w-4" /> DIAL 108
+                        </Button>
                         {elapsed !== null && elapsed < 120 ? (
                             <span className="text-xs text-slate-500">Updated {elapsed}s ago</span>
                         ) : elapsed !== null ? (

@@ -62,6 +62,13 @@ except Exception:
     except Exception:
         PDF_AVAILABLE = False
 
+
+# ── IoT Engine ────────────────────────────────────────────────────────────────
+from iot_engine import (
+    register_device, authenticate_device, list_devices, 
+    deregister_device, ingest_iot_reading, update_device_heartbeat
+)
+
 # ── Connect Care sub-engines ──────────────────────────────────────────────────
 from vitals_engine import (
     check_all_thresholds,
@@ -138,30 +145,7 @@ ANATOMY_MAP = {
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _load_json(path, default):
-    try:
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return default
-
-
-def _save_json(path, data):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, default=str)
-    except Exception as e:
-        logger.error(f"Save failed {path}: {e}")
-
-
-def _load_vitals_store():
-    return _load_json(VITALS_STORE_FILE, {})
-
-
-def _save_vitals_store(data):
-    _save_json(VITALS_STORE_FILE, data)
+from storage_utils import _load_vitals_store, _save_vitals_store, _load_json, _save_json, VITALS_STORE_FILE
 
 
 def log_session(session_id, filename, status, affected):
@@ -749,6 +733,64 @@ def analytics_summary(patient_id):
         "period": period,
         "analytics": analytics,
     })
+
+
+# ── IoT Device Endpoints ──────────────────────────────────────────────────────
+
+@app.route('/api/iot/register', methods=['POST'])
+@optional_auth
+def iot_register():
+    data = request.get_json(force=True) or {}
+    patient_id  = data.get("patient_id")
+    device_type = data.get("device_type", "custom")
+    device_name = data.get("device_name")
+    
+    if not patient_id:
+        return jsonify({"status": "error", "message": "patient_id required"}), 400
+        
+    try:
+        device = register_device(patient_id, device_type, device_name)
+        return jsonify({"status": "ok", "device": device})
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route('/api/iot/devices/<patient_id>', methods=['GET'])
+@optional_auth
+def iot_list_devices(patient_id):
+    devices = list_devices(patient_id)
+    return jsonify({"status": "ok", "devices": devices})
+
+
+@app.route('/api/iot/deregister/<device_id>', methods=['DELETE'])
+@optional_auth
+def iot_deregister(device_id):
+    deregister_device(device_id)
+    return jsonify({"status": "ok"})
+
+
+@app.route('/api/iot/submit', methods=['POST'])
+def iot_submit_data():
+    """
+    Ingest data from an IoT device.
+    Headers: X-API-Key
+    """
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        return jsonify({"status": "error", "message": "X-API-Key header required"}), 401
+        
+    device = authenticate_device(api_key)
+    if not device:
+        return jsonify({"status": "error", "message": "Invalid or inactive API key"}), 401
+        
+    reading = request.get_json(force=True) or {}
+    
+    # Update heartbeat
+    update_device_heartbeat(api_key, battery_pct=reading.get("battery_pct"))
+    
+    # Ingest data
+    result = ingest_iot_reading(device, reading)
+    return jsonify(result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

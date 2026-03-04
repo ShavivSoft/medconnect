@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, MapPin, AlertTriangle, User, Shield, PhoneCall, MessageSquare, Hospital, CheckCircle2, Activity } from "lucide-react";
+import { Phone, MapPin, AlertTriangle, User, Shield, PhoneCall, MessageSquare, Hospital, CheckCircle2, Activity, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { apiTriggerEmergency, apiEscalateEmergency, loadAuthFromStorage, apiSendWhatsAppLocation } from "@/lib/connectCareApi";
@@ -179,6 +179,20 @@ const Emergency = () => {
             Automated crash detection, 108 auto-dial, and live location sharing.
           </p>
         </div>
+
+        {/* PROMINENT SIMULATION BUTTON FOR TESTING */}
+        {state === "idle" && (
+          <div className="flex justify-center mb-8">
+            <Button
+              onClick={handleCrashDetection}
+              variant="outline"
+              className="border-red-500/20 text-red-500 hover:bg-red-500/10 gap-2 h-12 px-6 rounded-full font-bold transition-all hover:scale-105 active:scale-95"
+            >
+              <Zap className="h-4 w-4 animate-pulse" />
+              SIMULATE ACCIDENT (TEST 108)
+            </Button>
+          </div>
+        )}
 
         <div className="mx-auto max-w-2xl mt-12">
           <AnimatePresence mode="wait">

@@ -23,7 +23,7 @@ import {
     Play, Square, Activity, Droplets, Thermometer, Wind,
     ArrowLeft, Shield, CheckCircle2, AlertTriangle,
     RefreshCw, Smartphone, Bluetooth, BluetoothOff, Zap,
-    Radio, Info,
+    Radio, Info, PhoneCall
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -802,30 +802,42 @@ export default function WatchBridge() {
 
                 {/* ── Live vitals grid (when streaming) ─────────────────────────── */}
                 {streaming && liveData && (
-                    <div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Zap className="h-3 w-3 text-teal-400" /> Live Estimated Vitals
-                            <span className="text-slate-600">(HR from watch, rest derived)</span>
+                    <div className="space-y-4">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <Zap className="h-3 w-3 text-teal-400" /> Medical Monitor (Live)
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                { label: 'SpO₂', value: liveData.spo2, unit: '%', color: 'text-cyan-400', icon: <Droplets className="h-3 w-3" /> },
-                                { label: 'Sys BP', value: liveData.systolic_bp, unit: 'mmHg', color: 'text-blue-400', icon: <Activity className="h-3 w-3" /> },
-                                { label: 'Dia BP', value: liveData.diastolic_bp, unit: 'mmHg', color: 'text-indigo-400', icon: <Activity className="h-3 w-3" /> },
-                                { label: 'Temp', value: liveData.temperature_f, unit: '°F', color: 'text-orange-400', icon: <Thermometer className="h-3 w-3" /> },
-                                { label: 'Resp', value: liveData.respiratory_rate, unit: '/min', color: 'text-violet-400', icon: <Wind className="h-3 w-3" /> },
-                                { label: 'Packets', value: sent, unit: 'sent', color: 'text-teal-400', icon: <Wifi className="h-3 w-3" /> },
-                            ].map(({ label, value, unit, color, icon }) => (
-                                <div key={label} className="rounded-xl border border-slate-700 bg-slate-800/60 p-2.5 text-center">
-                                    <div className={`flex justify-center mb-1 ${color}`}>{icon}</div>
-                                    <div className={`text-sm font-bold font-mono ${color}`}>
-                                        {typeof value === 'number' ? value.toFixed(label === 'Packets' ? 0 : 1) : value}
-                                    </div>
-                                    <div className="text-[9px] text-slate-500">{unit}</div>
-                                    <div className="text-[9px] text-slate-600">{label}</div>
-                                </div>
-                            ))}
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center">
+                                <Heart className="h-5 w-5 text-red-500 mb-2" />
+                                <div className="text-3xl font-black font-mono text-red-400">{liveData.heart_rate}</div>
+                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Heart Rate</div>
+                            </div>
+                            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center">
+                                <Droplets className="h-5 w-5 text-cyan-500 mb-2" />
+                                <div className="text-3xl font-black font-mono text-cyan-400">{liveData.spo2.toFixed(1)}</div>
+                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Oxygen SpO2</div>
+                            </div>
+                            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center">
+                                <Activity className="h-5 w-5 text-blue-500 mb-2" />
+                                <div className="text-2xl font-black font-mono text-blue-400">{liveData.systolic_bp}/{liveData.diastolic_bp}</div>
+                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">BP (mmHg)</div>
+                            </div>
+                            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center">
+                                <Thermometer className="h-5 w-5 text-orange-500 mb-2" />
+                                <div className="text-3xl font-black font-mono text-orange-400">{liveData.temperature_f.toFixed(1)}</div>
+                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Temp °F</div>
+                            </div>
                         </div>
+
+                        {/* EMERGENCY 108 BUTTON (Prominent in Wearable Bridge) */}
+                        <button
+                            onClick={() => window.location.href = "tel:108"}
+                            className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black text-xl bg-red-600 hover:bg-red-700 text-white shadow-2xl shadow-red-950/50 border-2 border-white/20 animate-bounce"
+                        >
+                            <PhoneCall className="h-7 w-7" />
+                            DIAL 108 NOW
+                        </button>
                     </div>
                 )}
 
