@@ -36,59 +36,86 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // ── Tier 1: Supabase Auth (cloud — real persistent accounts) ──────────
+      // ── Tier 1: Backend JWT (Primary for Live Git features) ───────────────
+      // We prioritize our custom backend as it contains the IoT, Vitals, and Emergency logic
+      let authUser;
+      try {
+        if (isSignUp) {
+          authUser = await apiRegister({
+            name,
+            email,
+            password,
+            role,
+            age: role === "PATIENT" ? parseInt(age) : undefined,
+            phone,
+            emergency_contact: role === "PATIENT" ? emergencyContact : undefined,
+            relationship: role === "CARETAKER" ? relationship : undefined,
+          });
+        } else {
+          authUser = await apiLogin(email, password);
+        }
+
+        if (authUser) {
+          saveAuthToStorage(authUser);
+          toast({
+            title: isSignUp ? "Account Created!" : `Welcome back, ${authUser.name}!`,
+            description: authUser.role === "PATIENT" ? `Your Patient ID: ${authUser.patient_id}` : `Signed in as ${authUser.role}`
+          });
+          navigate(authUser.role === "CARETAKER" ? "/caretaker" : "/dashboard");
+          return;
+        }
+      } catch (backendErr) {
+        console.warn("Backend auth failed, falling back/trying Supabase:", backendErr);
+      }
+
+      // ── Tier 2: Supabase Auth (Fallback/Sync) ─────────────────────────────
       if (SUPABASE_ENABLED) {
         if (isSignUp) {
-          const { user } = await supabaseSignUp(email, password, name || email.split("@")[0], role);
-          if (user) {
-            saveAuthToStorage({ user_id: user.id, role, name: name || email.split("@")[0], token: '', permissions: [] });
-            toast({ title: `Account created!`, description: `Welcome, ${name || email}! Signed up as ${role}.` });
+          const data = await supabaseSignUp(email, password, name || email.split("@")[0], role);
+          if (data?.user) {
+            const token = data.session?.access_token || "";
+            const user_id = data.user.id;
+            saveAuthToStorage({ user_id, role, name: name || email.split("@")[0], token, permissions: [], patient_id: `SUPA-${user_id.slice(0, 8)}` });
+            toast({ title: `Account created via Supabase`, description: `Welcome, ${name || email}. signed in successfully.` });
             navigate(role === "CARETAKER" ? "/caretaker" : "/dashboard");
             return;
           }
         } else {
-          const { user, session } = await supabaseSignIn(email, password);
-          if (user && session) {
-            const userRole = (user.user_metadata?.role as "PATIENT" | "CARETAKER") ?? role;
-            const userName = (user.user_metadata?.name as string) ?? email.split("@")[0];
-            saveAuthToStorage({ user_id: user.id, role: userRole, name: userName, token: session.access_token, permissions: [] });
-            toast({ title: `Welcome back, ${userName}!`, description: `Signed in as ${userRole}` });
+          const data = await supabaseSignIn(email, password);
+          if (data?.user && data?.session) {
+            const userRole = (data.user.user_metadata?.role as "PATIENT" | "CARETAKER") ?? role;
+            const userName = (data.user.user_metadata?.name as string) ?? email.split("@")[0];
+            saveAuthToStorage({
+              user_id: data.user.id,
+              role: userRole,
+              name: userName,
+              token: data.session.access_token,
+              permissions: [],
+              patient_id: data.user.user_metadata?.patient_id || `SUPA-${data.user.id.slice(0, 8)}`
+            });
+            toast({ title: `Welcome back via Supabase`, description: `Signed in as ${userRole}` });
             navigate(userRole === "CARETAKER" ? "/caretaker" : "/dashboard");
             return;
           }
         }
       }
 
-      // ── Tier 2: Backend JWT ───────────────────────────────────────────────
-      let authUser;
-      if (isSignUp) {
-        authUser = await apiRegister({
-          name,
-          email,
-          password,
-          role,
-          age: role === "PATIENT" ? parseInt(age) : undefined,
-          phone,
-          emergency_contact: role === "PATIENT" ? emergencyContact : undefined,
-          relationship: role === "CARETAKER" ? relationship : undefined,
-        });
-      } else {
-        authUser = await apiLogin(email, password);
-      }
+      throw new Error("No authentication method succeeded.");
 
-      saveAuthToStorage(authUser);
-      toast({
-        title: isSignUp ? "Account Created!" : `Welcome back, ${authUser.name}!`,
-        description: isSignUp ? `Your unique ID: ${authUser.patient_id || 'Generating...'}` : `Signed in as ${authUser.role}`
-      });
-      navigate(authUser.role === "CARETAKER" ? "/caretaker" : "/dashboard");
     } catch (err: any) {
       // ── Tier 3: Demo mode (offline fallback) ─────────────────────────────
       console.error("Auth failed:", err);
       const userId = email.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      const fallbackUser = { user_id: userId, role, name: name || email.split("@")[0], token: "demo-token", permissions: [] };
+      const fallbackUser = {
+        user_id: userId,
+        role,
+        name: name || email.split("@")[0],
+        token: "demo-token",
+        permissions: [],
+        patient_id: `DEMO-${userId.slice(0, 8)}`
+      };
       saveAuthToStorage(fallbackUser);
-      toast({ title: "Demo Mode", description: "Signed in locally — backend/Supabase offline." });
+      toast({ title: "Demo Mode Enabled", description: "Backend & Supabase are unreachable. Using local storage." });
       navigate(role === "CARETAKER" ? "/caretaker" : "/dashboard");
     } finally {
       setLoading(false);

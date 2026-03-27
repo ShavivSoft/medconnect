@@ -25,6 +25,7 @@ import {
     RefreshCw, Smartphone, Bluetooth, BluetoothOff, Zap,
     Radio, Info, PhoneCall
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -611,6 +612,22 @@ export default function WatchBridge() {
             </div>
 
             <div className="flex-1 px-4 py-5 space-y-4">
+
+                <div className="flex justify-center mb-2">
+                    <Button
+                        onClick={() => {
+                            const bc = new BroadcastChannel("medconnect_emergency");
+                            bc.postMessage("CRASH_DETECTED");
+                            setTimeout(() => {
+                                window.location.href = "/emergency";
+                            }, 100);
+                        }}
+                        variant="destructive"
+                        className="w-full rounded-2xl font-black text-sm italic animate-pulse h-14 shadow-xl shadow-red-900/40 border-2 border-red-500/50"
+                    >
+                        <AlertTriangle className="mr-2 h-5 w-5" /> SIMULATE ACCIDENT (DIRECT 108)
+                    </Button>
+                </div>
 
                 {/* ── Wearable Device Info Section ── */}
                 <div className="rounded-2xl border border-slate-700 bg-slate-800/40 overflow-hidden shadow-xl">

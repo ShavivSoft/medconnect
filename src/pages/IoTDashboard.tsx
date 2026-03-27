@@ -149,7 +149,10 @@ const MiniMap = ({ lat, lon }: { lat?: number; lon?: number }) => (
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function IoTDashboard() {
     const patientId = (() => {
-        try { return (JSON.parse(localStorage.getItem("connectcare_auth") || "{}") as { user_id?: string }).user_id || "demo_patient"; }
+        try {
+            const auth = JSON.parse(localStorage.getItem("connectcare_auth") || "{}");
+            return auth.patient_id || auth.user_id || "demo_patient";
+        }
         catch { return "demo_patient"; }
     })();
 
@@ -293,12 +296,27 @@ export default function IoTDashboard() {
 
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                            <Watch className="h-8 w-8 text-teal-400" />
-                            IoT Live Monitor
-                        </h1>
-                        <p className="text-slate-400 mt-1">Real-time vitals from wearable devices — powered by Supabase Realtime</p>
+                    <div className="flex items-center gap-6">
+                        <Button
+                            onClick={() => {
+                                const bc = new BroadcastChannel("medconnect_emergency");
+                                bc.postMessage("CRASH_DETECTED");
+                                setTimeout(() => {
+                                    window.location.href = "/emergency";
+                                }, 100);
+                            }}
+                            variant="destructive"
+                            className="rounded-2xl font-black text-sm italic h-14 animate-pulse shadow-xl shadow-red-900/30 border-2 border-red-500/40 px-6"
+                        >
+                            <AlertTriangle className="mr-2 h-5 w-5" /> SIMULATE ACCIDENT
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                                <Watch className="h-8 w-8 text-teal-400" />
+                                IoT Live Monitor
+                            </h1>
+                            <p className="text-slate-400 mt-1">Real-time vitals from wearable devices — powered by Supabase Realtime</p>
+                        </div>
                     </div>
                     <div className="flex items-center gap-3">
                         {SUPABASE_ENABLED ? (

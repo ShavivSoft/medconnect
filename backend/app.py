@@ -63,12 +63,6 @@ except Exception:
         PDF_AVAILABLE = False
 
 
-# ── IoT Engine ────────────────────────────────────────────────────────────────
-from iot_engine import (
-    register_device, authenticate_device, list_devices, 
-    deregister_device, ingest_iot_reading, update_device_heartbeat
-)
-
 # ── Connect Care sub-engines ──────────────────────────────────────────────────
 from vitals_engine import (
     check_all_thresholds,
@@ -734,64 +728,6 @@ def analytics_summary(patient_id):
         "analytics": analytics,
     })
 
-
-# ── IoT Device Endpoints ──────────────────────────────────────────────────────
-
-@app.route('/api/iot/register', methods=['POST'])
-@optional_auth
-def iot_register():
-    data = request.get_json(force=True) or {}
-    patient_id  = data.get("patient_id")
-    device_type = data.get("device_type", "custom")
-    device_name = data.get("device_name")
-    
-    if not patient_id:
-        return jsonify({"status": "error", "message": "patient_id required"}), 400
-        
-    try:
-        device = register_device(patient_id, device_type, device_name)
-        return jsonify({"status": "ok", "device": device})
-    except ValueError as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-
-@app.route('/api/iot/devices/<patient_id>', methods=['GET'])
-@optional_auth
-def iot_list_devices(patient_id):
-    devices = list_devices(patient_id)
-    return jsonify({"status": "ok", "devices": devices})
-
-
-@app.route('/api/iot/deregister/<device_id>', methods=['DELETE'])
-@optional_auth
-def iot_deregister(device_id):
-    deregister_device(device_id)
-    return jsonify({"status": "ok"})
-
-
-@app.route('/api/iot/submit', methods=['POST'])
-@app.route('/api/iot/data', methods=['POST'])
-def iot_submit_data():
-    """
-    Ingest data from an IoT device.
-    Headers: X-API-Key or X-Device-Key
-    """
-    api_key = request.headers.get("X-API-Key") or request.headers.get("X-Device-Key")
-    if not api_key:
-        return jsonify({"status": "error", "message": "API key header required (X-API-Key or X-Device-Key)"}), 401
-        
-    device = authenticate_device(api_key)
-    if not device:
-        return jsonify({"status": "error", "message": "Invalid or inactive API key"}), 401
-        
-    reading = request.get_json(force=True) or {}
-    
-    # Update heartbeat
-    update_device_heartbeat(api_key, battery_pct=reading.get("battery_pct"))
-    
-    # Ingest data
-    result = ingest_iot_reading(device, reading)
-    return jsonify(result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
