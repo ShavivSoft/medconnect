@@ -160,13 +160,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-## 📬 Contact
-
-Have questions or want to schedule a demo?
-
-- 📧 Email: support@medconnect.com
-- 🌐 Website: [medconnect-2.vercel.app](https://medconnect-2.vercel.app)
-- 📍 123 Health Avenue, San Francisco, CA 94103
 
 ---
 
