@@ -1,68 +1,129 @@
 # MedConnect
 
-MedConnect is a comprehensive healthcare companion application designed to bridge the gap between patients, their caretakers, and their health data. By integrating native health functionality and real-time vital monitoring, MedConnect provides an intuitive platform for continuous health tracking and management.
+**AI health companion that reads medical reports, explains them in plain language, and shows the affected organs on an interactive 3D body.**
 
-## Key Features
+🔗 **Live demo:** https://medconnect-black-six.vercel.app
 
-- **Native Health Data Sync**: Seamlessly integrates with native mobile health frameworks (Health Connect for Android, HealthKit for iOS) and smart wearables to sync user vitals accurately.
-- **Real-Time Vital Monitoring**: Live tracking of heart rate, blood pressure, oxygen levels, and other essential metrics using intelligent data bridging (`WatchBridge`).
-- **Caregiver Dashboard**: A dedicated portal (Caretaker View) allowing assigned caretakers and medical professionals to monitor patient metrics remotely and receive alerts.
-- **Secure Authentication & Data Storage**: Powered by Supabase to handle secure user authentication, role-based access control (Patient vs. Caretaker), and secure health records.
-- **Document & Prescription Processing**: Incorporates advanced OCR via the backend for processing medical records and prescription text.
+MedConnect turns a scanned report, photo or PDF into a short, patient-friendly summary in 7 Indian languages. It also tracks vitals with anomaly detection and alerts caretakers in an emergency.
 
-## Tech Stack
+---
 
-**Frontend:**
-- React
-- Vite
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
+## What it does
 
-**Backend:**
-- Node.js & Express
-- Supabase (PostgreSQL, Auth, Storage)
-- Python (for specialized AI and OCR tasks)
+**AI report simplification**
+- Upload a report as an image or PDF. Text is extracted with Tesseract OCR and OpenCV preprocessing, or with pdfplumber / PyPDF2 for PDFs.
+- An LLM writes a 3–5 sentence summary covering key findings, medicines and advice, in English, Hindi, Telugu, Kannada, Malayalam, Tamil or Odia.
+- The model also returns the affected organs, which drive the 3D view.
 
-## Getting Started
+**Multi-model AI with fallback**
+- The backend tries several models in order, so one provider outage or quota limit doesn't break the app:
+  1. **Google Gemini** (vision): reads the document image directly
+  2. **Groq, Llama 3.3 70B**: fast text analysis
+  3. **OpenAI GPT-4o-mini**
+  4. **Ollama**: local model, works offline
+- A follow-up **chat** endpoint lets patients ask questions about their report.
 
-### Prerequisites
+**3D body visualization**
+- Built with Three.js / React Three Fiber.
+- Highlights the organs flagged in the report.
+- Toggle anatomy layers: organs, skeletal, cardiovascular, nervous and muscular.
 
-- Node.js (v18 or higher recommended)
-- npm, yarn, or bun
-- Supabase project for backend configuration
+**Vitals monitoring and anomaly detection**
+- Sync vitals from Health Connect (Android), HealthKit (iOS), wearables or IoT devices.
+- `vitals_engine.py` checks every reading against warning and critical thresholds.
+- It flags outliers with z-scores, smooths noisy readings and detects trends to produce risk flags.
 
-### Installation
+**Emergency response**
+- One-tap emergency trigger with escalation, cancel, resolve and override.
+- Caretaker alerts by WhatsApp and voice call through Twilio.
+- Every emergency event is written to an audit log.
 
-1. **Clone the repository:**
-   ```bash
-   git clone <YOUR_GIT_URL>
-   cd medic-companion-link-main
-   ```
+**Patient and caretaker roles**
+- Role-based access control.
+- A caretaker dashboard for monitoring linked patients remotely.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+---
 
-3. **Environment Setup:**
-   Ensure you have your environment variables set up properly. Create a `.env` file based on `.env.local` if necessary, and include your Supabase keys:
-   ```plaintext
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+## Tech stack
 
-4. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
+| Layer | Tools |
+|---|---|
+| Frontend | React, TypeScript, Vite, Tailwind CSS, shadcn/ui, Three.js (React Three Fiber) |
+| Backend | Python, Flask, Waitress |
+| AI / ML | Google Gemini, Llama 3.3 (Groq), OpenAI, Ollama, Tesseract OCR, OpenCV |
+| Data | Supabase (PostgreSQL, Auth, Storage) |
+| Alerts | Twilio (WhatsApp + voice) |
+| Deploy | Vercel (frontend) |
 
-## Deployment
+---
 
-The application is structured for straightforward deployment to modern cloud hosting providers:
+## Project structure
 
-- **Frontend**: Ready for deployment on platforms like Vercel or Netlify.
-- **Backend**: Can be hosted on Render or similar Node.js compatible environments.
-- **Database**: Managed seamlessly via Supabase.
+```
+backend/
+  app.py              Flask API: reports, AI summary, chat, vitals, emergency, IoT
+  vitals_engine.py    Thresholds, z-score outliers, trends, risk flags
+  emergency_engine.py Escalation flow, Twilio alerts, audit log
+  iot_engine.py       Device registration and data ingest
+  rbac.py             Patient / caretaker roles
+  run_server.py       Production server (Waitress)
+src/pages/
+  Reports.tsx         Upload and AI summary
+  ThreeDView.tsx      3D anatomy viewer
+  Dashboard.tsx       Patient vitals
+  Caretaker.tsx       Caretaker dashboard
+  Emergency.tsx       Emergency controls
+  IoTDashboard.tsx    Connected devices
+```
 
-Ensure your environment variables are correctly mirrored in your deployment environment settings to maintain connectivity between your frontend, backend, and database.
+---
+
+## Running locally
+
+**Requirements:** Node.js 18+, Python 3.10+, Tesseract OCR installed, a Supabase project.
+
+**1. Frontend**
+```bash
+npm install
+npm run dev          # http://localhost:5173
+```
+
+**2. Backend**
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate        # macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env       # then fill in your keys
+python run_server.py         # http://localhost:5000
+```
+
+On Windows, `start.bat` launches both the backend and the frontend.
+
+**3. Environment variables**
+
+Put these in `backend/.env`. Never commit this file.
+
+```
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+JWT_SECRET=
+GOOGLE_API_KEY=        # Gemini
+GROQ_API_KEY=          # Llama 3.3
+OPENAI_API_KEY=        # optional
+TWILIO_ACCOUNT_SID=    # optional, for emergency alerts
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=
+```
+
+You only need one AI key; the app falls back through whichever providers are configured.
+
+The frontend reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+---
+
+## Author
+
+**Shaviv Ebenezer Medhari**: [LinkedIn](https://linkedin.com/in/shavivebe) · [GitHub](https://github.com/ShavivSoft)
+
+> MedConnect is a final-year project and is not a medical device. Summaries are for understanding only and do not replace a doctor's advice.
